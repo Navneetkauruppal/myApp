@@ -71,9 +71,7 @@ def findUserAndLogIn(userEmail, userPassword):
     if(userEmail == data['emp_details'][i]['userEmail'] and userPassword == data['emp_details'][i]['userPassword'] ):
         print("Welcome "+ data['emp_details'][i]['userName'])
         afterLoginSteps(i, data['emp_details'][i])
-    else:
-      print("User Doesn't exist!")
-
+    
 def afterLoginSteps(index, loggedInUserDetail):
   print("Please enter 1 for resetting the password: ")
   print("Please enter 2 for signout: ")
@@ -84,9 +82,10 @@ def afterLoginSteps(index, loggedInUserDetail):
       currentPassword = input("Please enter your old password: ")
       if(currentPassword == loggedInUserDetail['userPassword'] ):
         newPassword = input("Please enter your new password: ")
-        if(updatePasswordInJsonFile(index, newPassword)):
+        updatedData = updatePasswordInJsonFile(index, newPassword)
+        if(updatedData):
           print("Your password has been reset successfully!")
-          afterLoginSteps(index, loggedInUserDetail)
+          afterLoginSteps(index, updatedData)
         
         else:
           print("Something went wrong!")
@@ -184,9 +183,8 @@ def selectCategory(userInput):
   elif (userInput == '2'):
     userlogin = loginUser()
     if (userlogin):
-      print("You have successfully Signed up!")
-    else:
-      print("Something went wrong, please try again!")
+      print("You have successfully Signed in!")
+    else: 
       userMenu()
 
 # checks if file exists
@@ -224,17 +222,16 @@ def load_json(filename=file_Name):
     return file_data
 
 def updatePasswordInJsonFile(index, updatedValue):
-    jsonFile = open(file_Name, "r") # Open the JSON file for reading
-    data = json.load(jsonFile) # Read the JSON into the buffer
-    jsonFile.close() # Close the JSON file
-
-    ## Working with buffered content
-    data["emp_details"][index]["userPassword"] = updatedValue
-
-    ## Save our changes to JSON file
-    jsonFile = open(file_Name, "w+")
-    jsonFile.write(json.dump(data))
-    jsonFile.close()
+  with open(file_Name, 'r+') as file:
+    # First we load existing data into a dict.
+    file_data = json.load(file)
+    # Join new_data with file_data inside emp_details
+    file_data["emp_details"][index]["userPassword"] = updatedValue
+    # Sets file's current position at offset.
+    file.seek(0)
+    # convert back to json.
+    json.dump(file_data, file, indent=4)  
+    return file_data["emp_details"][index]
   
 # Main method
 def main():
