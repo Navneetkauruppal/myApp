@@ -1,0 +1,46 @@
+{
+    "emp_details": [
+        {
+            "userName": "sam",
+            "userEmail": "sam@yopmail.com",
+            "userPhone": "34343434",
+            "userPassword": "Welcome@1"
+        },
+        {
+            "userName": "das",
+            "userEmail": "das@yopmail.com",
+            "userPhone": "34343434",
+            "userPassword": "Welcome@2"
+        },
+        {
+            "userName": "simran",
+            "userEmail": "simran@yopmail.com",
+            "userPhone": "02323232",
+            "userPassword": "Welcome@3"
+        },
+        {
+            "userName": "Rocky",
+            "userEmail": "rocky@yopmail.com",
+            "userPhone": "02323232423",
+            "userPassword": "Welcome@1"
+        },
+        {
+            "userName": "rocky2",
+            "userEmail": "rocky2@yopmail.com",
+            "userPhone": "0444221144",
+            "userPassword": "Welcome@3"
+        },
+        {
+            "userName": "rocks",
+            "userEmail": "rocks@yopmail.com",
+            "userPhone": "045454343",
+            "userPassword": "Welcome@123"
+        },
+        {
+            "userName": "pol",
+            "userEmail": "pol@yopmail.com",
+            "userPhone": "093949343",
+            "userPassword": "Welcome@33"
+        }
+    ]
+}
