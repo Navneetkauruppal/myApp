@@ -1,8 +1,10 @@
-import re, sys, json, io, os
+import re, json, io, os
+from datetime import date, datetime
 
 # Regular expression
 # for validating an Email
 regex = r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b'
+regexMobile = '/^0\d{8,9}$/'
 file_Name = "data.json"
 
 
@@ -17,18 +19,44 @@ def checkEmail(email):
   else:
     return False
 
+
 # Define a funtion for
 # for phone number validation
 def checkUserPhone(params):
-  if (params):
+  # pass the regular expression
+  # and the string into the fullmatch() method
+  if (re.fullmatch(regexMobile, params)):
     return True
   else:
+    print("Please enter valid phone number starts with 0 (eg: 0470294174)")
+    return False
+
+
+# Define function to check and validate date of birth
+def checkUserDob(dateOfBirth):
+  try:
+    datetime.strptime(dateOfBirth, "%d/%m/%Y")
+    return True
+  except:
+    return False
+
+
+def checkYears(dateOfBirth):
+  todayDate = date.today()
+  # convert string to date object
+  d1 = datetime.strptime(todayDate, "%Y/%m/%d")
+  d2 = datetime.strptime(dateOfBirth, "%Y/%m/%d")
+  # difference between dates in timedelta
+  diff = d1 - d2
+  if (diff >= 21):
+    return True
+  else:
+    print("You must be 21 years old to access this application!")
     return False
 
 
 # Function to validate the password
 def password_check(passwd):
-
   SpecialSym = ['$', '@', '#', '%']
   val = True
 
@@ -58,54 +86,59 @@ def password_check(passwd):
   if val:
     return val
 
+
 # common function to print messages
 def throw_error_message(params):
   print(params)
   return False
+
 
 # define a function to find user for login
 def findUserAndLogIn(userEmail, userPassword):
   data = load_json()
 
   for i in range(len(data['emp_details'])):
-    if(userEmail == data['emp_details'][i]['userEmail'] and userPassword == data['emp_details'][i]['userPassword'] ):
-        print("Welcome "+ data['emp_details'][i]['userName'])
-        afterLoginSteps(i, data['emp_details'][i])
-    
+    if (userEmail == data['emp_details'][i]['userEmail']
+        and userPassword == data['emp_details'][i]['userPassword']):
+      print("Welcome " + data['emp_details'][i]['userName'])
+      afterLoginSteps(i, data['emp_details'][i])
+
+
 def afterLoginSteps(index, loggedInUserDetail):
   print("Please enter 1 for resetting the password: ")
   print("Please enter 2 for signout: ")
   selectedVal = input()
-  if(selectedVal == '1'):
+  if (selectedVal == '1'):
     username = input("Please enter Username(Mobile no): ")
-    if(username == loggedInUserDetail['userPhone'] or username == loggedInUserDetail['userName']):
+    if (username == loggedInUserDetail['userPhone']
+        or username == loggedInUserDetail['userName']):
       currentPassword = input("Please enter your old password: ")
-      if(currentPassword == loggedInUserDetail['userPassword'] ):
+      if (currentPassword == loggedInUserDetail['userPassword']):
         newPassword = input("Please enter your new password: ")
         updatedData = updatePasswordInJsonFile(index, newPassword)
-        if(updatedData):
+        if (updatedData):
           print("Your password has been reset successfully!")
           afterLoginSteps(index, updatedData)
-        
+
         else:
           print("Something went wrong!")
           print("Please try again!")
           afterLoginSteps(index, loggedInUserDetail)
-          
+
       else:
         print("You have entered the wrong password")
         afterLoginSteps(index, loggedInUserDetail)
-    
+
     else:
-      print("You have not signedup with this Contact Number, Please Sign up First")
+      print(
+        "You have not signedup with this Contact Number, Please Sign up First")
       userMenu()
-    
+
   else:
     print("Thank you for using the system")
 
 
-      
-# Helper login user function  
+# Helper login user function
 def loginUser():
   userEmail = input("Please enter your email ")
   if (checkEmail(userEmail)):
@@ -118,6 +151,7 @@ def loginUser():
   else:
     print("Email is not valid, please try again!")
     userMenu()
+
 
 # define a function for register a user
 def registerUser():
@@ -145,6 +179,14 @@ def registerUser():
           userConfirmPassword = input("Please Confirm Your Password ")
           if (userConfirmPassword == userPassword):
             myDict["userPassword"] = userPassword
+            userDob = input(
+              "Please Enter Your Date of Birth # DD/MM/YYYY (No Space): ")
+            if (checkUserDob(userDob)):
+              myDict["userDob"] = userDob
+            else:
+              myDict = []
+              throw_error_message(
+                "You have entered the Date of Birth in invalid format!")
           else:
             throw_error_message(
               "Password and confirm password doesn't matched")
@@ -157,7 +199,7 @@ def registerUser():
 
   return myDict
 
-  
+
 # Show menu category
 def userMenu():
   print("Please Enter 1 for Sign up ")
@@ -167,7 +209,7 @@ def userMenu():
   selectCategory(userInput)
   return userInput
 
-  
+
 # define function to select category
 def selectCategory(userInput):
   if (userInput == '1'):
@@ -178,23 +220,24 @@ def selectCategory(userInput):
       print("You have successfully Signed up!")
       userMenu()
     else:
-      print("Something went wrong, please try again!")
+      print("Please start again!")
       userMenu()
   elif (userInput == '2'):
     userlogin = loginUser()
     if (userlogin):
       print("You have successfully Signed in!")
-    else: 
+    else:
       userMenu()
+
 
 # checks if file exists
 def startupCheck():
   ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
 
   if os.path.isfile(ROOT_DIR + '/' + file_Name) and os.access(
-      ROOT_DIR + '/' +file_Name, os.R_OK):
-    #File exists and is readable 
-    print('....loading')
+      ROOT_DIR + '/' + file_Name, os.R_OK):
+    #File exists and is readable
+    print('.')
   else:
     #Either file is missing or is not readable, creating file...
     with io.open(os.path.join(ROOT_DIR, file_Name), 'w') as db_file:
@@ -221,6 +264,7 @@ def load_json(filename=file_Name):
     file_data = json.load(file)
     return file_data
 
+
 def updatePasswordInJsonFile(index, updatedValue):
   with open(file_Name, 'r+') as file:
     # First we load existing data into a dict.
@@ -230,15 +274,16 @@ def updatePasswordInJsonFile(index, updatedValue):
     # Sets file's current position at offset.
     file.seek(0)
     # convert back to json.
-    json.dump(file_data, file, indent=4)  
+    json.dump(file_data, file, indent=4)
     return file_data["emp_details"][index]
-  
+
+
 # Main method
 def main():
   global userDetails
   userMenu()
 
-  
+
 # Driver Code
 if __name__ == '__main__':
   main()
