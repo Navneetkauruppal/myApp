@@ -4,7 +4,7 @@ from datetime import date, datetime
 # Regular expression
 # for validating an Email
 regex = r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b'
-regexMobile = '/^0\d{8,9}$/'
+regexMobile = '^0\d(?:\s\d{2})*$'
 file_Name = "data.json"
 
 
@@ -25,8 +25,13 @@ def checkEmail(email):
 def checkUserPhone(params):
   # pass the regular expression
   # and the string into the fullmatch() method
-  if (re.fullmatch(regexMobile, params)):
-    return True
+  r = params.startswith("0")
+  if r == True:
+    if params.isdigit() and (len(params) == 9 or len(params) == 10):
+      return True
+    else:
+      print("Please enter valid phone number starts with 0 (eg: 0470294174)")
+    return False
   else:
     print("Please enter valid phone number starts with 0 (eg: 0470294174)")
     return False
@@ -94,14 +99,74 @@ def throw_error_message(params):
 
 
 # define a function to find user for login
-def findUserAndLogIn(userEmail, userPassword):
+def findUserAndLogIn(userName, userPassword, attemptCounter):
   data = load_json()
-
+  counter = 0
   for i in range(len(data['emp_details'])):
-    if (userEmail == data['emp_details'][i]['userEmail']
-        and userPassword == data['emp_details'][i]['userPassword']):
-      print("Welcome " + data['emp_details'][i]['userName'])
-      afterLoginSteps(i, data['emp_details'][i])
+    if ((userName == data['emp_details'][i]['userName']
+         or userName == data['emp_details'][i]['userPhone'])):
+      counter = 1
+      if (userPassword == data['emp_details'][i]['userPassword']):
+        attemptCounter = 0
+        print("Welcome " + data['emp_details'][i]['userName'])
+        afterLoginSteps(i, data['emp_details'][i])
+      else:
+        attemptCounter = attemptCounter + 1
+        print("You have entered the wrong password")
+        print(attemptCounter)
+        print("Please try again!")
+        if (attemptCounter >= 3):
+          showDoBForLogin()
+        else:
+          userName = input("Please enter your Username (Mobile Number): ")
+          if (userName):
+            userPassword = input("Please enter your password ")
+            if (password_check(userPassword)):
+              findUserAndLogIn(userName, userPassword, attemptCounter)
+            else:
+              print("Password is not valid, please try again")
+              userMenu()
+          else:
+            print("Email is not valid, please try again!")
+            userMenu()
+
+  if (counter == 0):
+    print(
+      "You have not signedup with this Contact Number, Please Signup First")
+    userMenu()
+
+
+def showDoBForLogin():
+  print("You have used the maximum attempts to login: ")
+  print("Please reset the password by entering the following details: ")
+  username = input("Please enter your Username (Mobile Number) to confirm: ")
+  dateOfBirth = input(
+    "Please enter your Date of Birth in DD/MM/YYYY format, to confirm : ")
+  newPassword = input("Please enter you new password: ")
+  confirmNewPassword = input("Please re-enter you new password: ")
+  processForgotPassword(username, dateOfBirth, newPassword, confirmNewPassword)
+
+
+def processForgotPassword(username, dateOfBirth, newPassword,
+                          confirmNewPassword):
+  if (checkUserDob(dateOfBirth)):
+    if (newPassword == confirmNewPassword):
+      data = load_json()
+      for i in range(len(data['emp_details'])):
+        if (username == data['emp_details'][i]['userName']
+            or username == data['emp_details'][i]['userPhone']):
+          updatePasswordInJsonFile(i, newPassword)
+          print("Your password has been reset succesfully!")
+          userMenu()
+    else:
+      throw_error_message("Password and confirm password doesn't matched!")
+      print("Please start again!")
+      showDoBForLogin()
+  else:
+    throw_error_message(
+      "You have entered the Date of Birth in invalid format!")
+    print("Please start again!")
+    showDoBForLogin()
 
 
 def afterLoginSteps(index, loggedInUserDetail):
@@ -140,11 +205,11 @@ def afterLoginSteps(index, loggedInUserDetail):
 
 # Helper login user function
 def loginUser():
-  userEmail = input("Please enter your email ")
-  if (checkEmail(userEmail)):
+  userName = input("Please enter your Username (Mobile Number): ")
+  if (userName):
     userPassword = input("Please enter your password ")
     if (password_check(userPassword)):
-      findUserAndLogIn(userEmail, userPassword)
+      findUserAndLogIn(userName, userPassword, 0)
     else:
       print("Password is not valid, please try again")
       userMenu()
@@ -161,6 +226,7 @@ def registerUser():
   userPassword = ''
   userConfirmPassword = ''
   myDict = {}
+
   userName = input("Please Enter Your Name ")
   if (userName == '' or len(userName) < 3):
     throw_error_message(
@@ -196,6 +262,7 @@ def registerUser():
         myDict = []
     else:
       myDict = []
+      throw_error_message("Please enter a valid email")
 
   return myDict
 
@@ -228,6 +295,8 @@ def selectCategory(userInput):
       print("You have successfully Signed in!")
     else:
       userMenu()
+  else:
+    print("Thank you for using the Aplication")
 
 
 # checks if file exists
@@ -266,14 +335,14 @@ def load_json(filename=file_Name):
 
 
 def updatePasswordInJsonFile(index, updatedValue):
+
   with open(file_Name, 'r+') as file:
     # First we load existing data into a dict.
     file_data = json.load(file)
     # Join new_data with file_data inside emp_details
     file_data["emp_details"][index]["userPassword"] = updatedValue
-    # Sets file's current position at offset.
     file.seek(0)
-    # convert back to json.
+    file.truncate()
     json.dump(file_data, file, indent=4)
     return file_data["emp_details"][index]
 
