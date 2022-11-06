@@ -46,6 +46,7 @@ def checkUserDob(dateOfBirth):
     return False
 
 
+# check years, if user is more than 21 years old
 def checkYears(dateOfBirth):
   todayDate = date.today()
   # convert string to date object
@@ -136,6 +137,8 @@ def findUserAndLogIn(userName, userPassword, attemptCounter):
     userMenu()
 
 
+# if user entered wrong password while login and 3 attempts failed
+# then this function will take care rest of the things
 def showDoBForLogin():
   print("You have used the maximum attempts to login: ")
   print("Please reset the password by entering the following details: ")
@@ -147,6 +150,7 @@ def showDoBForLogin():
   processForgotPassword(username, dateOfBirth, newPassword, confirmNewPassword)
 
 
+# forgot password after login attempts failed
 def processForgotPassword(username, dateOfBirth, newPassword,
                           confirmNewPassword):
   if (checkUserDob(dateOfBirth)):
@@ -169,6 +173,7 @@ def processForgotPassword(username, dateOfBirth, newPassword,
     showDoBForLogin()
 
 
+# once user gets login, now we need to show after login steps
 def afterLoginSteps(index, loggedInUserDetail):
   print("Please enter 1 for resetting the password: ")
   print("Please enter 2 for signout: ")
